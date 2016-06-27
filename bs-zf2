@@ -1,0 +1,58 @@
+#!/usr/bin/env php
+<?php
+/**
+ * ZF2 command line tool
+ *
+ * @link      http://github.com/zendframework/ZFTool for the canonical source repository
+ * @copyright Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   http://framework.zend.com/license/new-bsd New BSD License
+ */
+$basePath = getcwd();
+
+define('APP_ROOT', __DIR__);
+defined('APP_ENVIRONMENT') ||
+define('APP_ENVIRONMENT', isset($_ENV['APP_ENVIRONMENT']) ? $_ENV['APP_ENVIRONMENT'] : (
+isset($_SERVER['APP_ENVIRONMENT']) ? $_SERVER['APP_ENVIRONMENT'] : 'production'
+));
+
+ini_set('user_agent', 'BirdSystem Command Line Interface');
+
+// load autoloader
+foreach ([
+             __DIR__ . '/../../autoload.php',
+             __DIR__ . '/../vendor/autoload.php',
+             __DIR__ . '/vendor/autoload.php',
+         ] as $file) {
+    if (file_exists($file)) {
+        define('BS_ZF2_INSTALLATION', $file);
+
+        break;
+    }
+}
+
+unset($file);
+if (!defined('BS_ZF2_INSTALLATION')) {
+    echo 'Error: I cannot find the autoloader of the application.' . PHP_EOL;
+    echo "Check if $basePath contains a valid application." . PHP_EOL;
+    exit(2);
+}else{
+    require_once BS_ZF2_INSTALLATION;
+}
+
+$appConfig = [
+    'modules'                 => [
+        'CLI',
+    ],
+    'module_listener_options' => [
+        'config_glob_paths' => [
+            __DIR__ . '/../../config/autoload/{,*.}{global,local}.php',
+            __DIR__ . '/../config/autoload/{,*.}{global,local}.php',
+            __DIR__ . '/config/autoload/{,*.}{global,local}.php',
+        ],
+        'module_paths'      => [
+            __DIR__ . '/module',
+        ],
+    ],
+];
+
+Zend\Mvc\Application::init($appConfig)->run();

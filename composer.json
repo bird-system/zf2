@@ -1,16 +1,27 @@
 {
   "name": "birdsystem/zf2",
   "require": {
-    "zendframework/zendframework": "~2.5",
+    "php": ">=5.6",
+    "zendframework/zendframework": "^2",
     "phpoffice/phpexcel": "@stable",
     "mattketmo/camel": "@stable"
   },
   "require-dev": {
-    "enlitepro/enlite-monolog": "@stable"
+    "enlitepro/enlite-monolog": "@stable",
+    "zendframework/zend-test": "@stable",
+    "fzaninotto/Faker": "dev-master",
+    "bramus/monolog-colored-line-formatter": "~2",
+    "sebastian/finder-facade": "~1.1",
+    "theseer/fdomdocument": "1.6.*",
+    "phpunit/phpunit": "~5"
   },
   "autoload": {
     "psr-4": {
-      "BS\\": "src/"
+      "BS\\": "src/",
+      "CLI\\": "module/CLI/src/"
     }
-  }
+  },
+  "bin": [
+    "bs-zf2"
+  ]
 }

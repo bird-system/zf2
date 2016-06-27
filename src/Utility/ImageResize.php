@@ -1,6 +1,4 @@
 <?php
-
-
 /*
  * ---------------------------------------------------------------------
  * Credits: Bit Repository Source URL:
@@ -34,7 +32,7 @@ class ImageResize
             exit("File {$this->imageToResize} does not exist.");
         }
 
-        $info = GetImageSize($this->imageToResize);
+        $info = getimagesize($this->imageToResize);
 
         if (empty($info)) {
             exit("The file {$this->imageToResize} doesn't seem to be an image.");
@@ -113,11 +111,11 @@ class ImageResize
         }
 
         // New Image
-        $imageC = ImageCreateTrueColor($this->newWidth, $this->newHeight);
+        $imageC = imagecreatetruecolor($this->newWidth, $this->newHeight);
 
         $newImage = $imageCreateFunc($this->imageToResize);
 
-        ImageCopyResampled($imageC, $newImage, 0, 0, 0, 0, $this->newWidth, $this->newHeight, $width, $height);
+        imagecopyresampled($imageC, $newImage, 0, 0, 0, 0, $this->newWidth, $this->newHeight, $width, $height);
 
         if ($this->saveFolder) {
             if ($this->newImageName) {
