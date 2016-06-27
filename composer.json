@@ -1,5 +1,5 @@
 {
-  "name": "birdsystem/zf2basic",
+  "name": "birdsystem/zf2",
   "require": {
     "zendframework/zendframework": "~2.5",
     "enlitepro/enlite-monolog": "@stable",
