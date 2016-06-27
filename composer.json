@@ -1,0 +1,14 @@
+{
+  "name": "birdsystem/zf2basic",
+  "require": {
+    "zendframework/zendframework": "~2.5",
+    "enlitepro/enlite-monolog": "@stable",
+    "phpoffice/phpexcel": "@stable",
+    "mattketmo/camel": "@stable"
+  },
+  "autoload": {
+    "psr-4": {
+      "ZF2Basic\\": "src/"
+    }
+  }
+}
