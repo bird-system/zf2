@@ -19,7 +19,7 @@ ini_set('user_agent', 'BirdSystem Command Line Interface');
 
 // load autoloader
 foreach ([
-             __DIR__ . '/../../autoload.php',
+             __DIR__ . '/../../vendor/autoload.php',
              __DIR__ . '/../vendor/autoload.php',
              __DIR__ . '/vendor/autoload.php',
          ] as $file) {
@@ -45,6 +45,7 @@ $appConfig = [
     ],
     'module_listener_options' => [
         'config_glob_paths' => [
+            __DIR__ . '/../../../config/autoload/{,*.}{global,local}.php',
             __DIR__ . '/../../config/autoload/{,*.}{global,local}.php',
             __DIR__ . '/../config/autoload/{,*.}{global,local}.php',
             __DIR__ . '/config/autoload/{,*.}{global,local}.php',

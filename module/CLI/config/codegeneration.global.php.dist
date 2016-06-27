@@ -1,0 +1,16 @@
+<?php
+# Copy this file to your /config/autoload/ and remove the .dist postfix
+use CLI\Model\CodeGeneratorConfiguration;
+
+return [
+    'CodeGeneration' => [
+        'code_base_path' => realpath(__DIR__ . '/../../module/'),
+        'modules'        => [
+            'MODULE_NAME' => [
+                CodeGeneratorConfiguration::TABLE_WHITELIST => [
+                ]
+            ]
+        ],
+        'base_module'    => 'BASE_MODULE_NAME'
+    ]
+];
