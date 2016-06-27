@@ -8,7 +8,7 @@
   },
   "autoload": {
     "psr-4": {
-      "ZF2Basic\\": "src/"
+      "BS\\": "src/"
     }
   }
 }
