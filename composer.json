@@ -2,9 +2,11 @@
   "name": "birdsystem/zf2",
   "require": {
     "zendframework/zendframework": "~2.5",
-    "enlitepro/enlite-monolog": "@stable",
     "phpoffice/phpexcel": "@stable",
     "mattketmo/camel": "@stable"
+  },
+  "require-dev": {
+    "enlitepro/enlite-monolog": "@stable"
   },
   "autoload": {
     "psr-4": {
