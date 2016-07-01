@@ -13,6 +13,7 @@ use Zend\Code\Generator\PropertyGenerator;
 use Zend\Db\Metadata\Object\ColumnObject;
 use Zend\Db\Metadata\Object\ConstraintObject;
 use Zend\Db\Metadata\Object\TableObject;
+use Zend\Code\Exception\RuntimeException;
 
 class BaseModuleBaseModel extends AbstractFileGenerator
 {
@@ -66,7 +67,9 @@ class BaseModuleBaseModel extends AbstractFileGenerator
                 'return $this->decodeCompositeKey($id);'
             );
         } else {
-            if ($primaryKeys[0] != 'id') {
+            if (!isset($primaryKeys[0])) {
+                echo sprintf("Table [%s] haven't primary key.\n", $this->table->getName());
+            } elseif ($primaryKeys[0] != 'id') {
                 $ClassGenerator->addMethod('getId',
                     [],
                     MethodGenerator::FLAG_PUBLIC,
