@@ -143,9 +143,11 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
     {
         $event->setController($this);
         $event->setResult($this->viewModel);
-        $event->setError($message);
+        // $event->setError($message);
+        //TODO: through the exception get error code
+        $event->setParam('code', $exception);
         $event->setParam('exception', $exception);
-        $event->getApplication()->getEventManager()->trigger(MvcEvent::EVENT_DISPATCH_ERROR, $event);
+        // $event->getApplication()->getEventManager()->trigger(MvcEvent::EVENT_DISPATCH_ERROR, $event);
     }
 
     public function create($data)
