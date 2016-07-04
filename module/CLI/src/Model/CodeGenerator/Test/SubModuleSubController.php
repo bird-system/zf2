@@ -43,13 +43,15 @@ class SubModuleSubController extends AbstractFileGenerator
         $ClassGenerator->addMethod('testIndexAction', [], MethodGenerator::FLAG_PUBLIC, $this->testIndexAction());
         $ClassGenerator->addMethod('testGetAction', ['id'], MethodGenerator::FLAG_PUBLIC, $this->testGetAction(), new
         DocBlockGenerator(null, null, [
-            new GenericTag('depends', 'testAddAction')
+            new GenericTag('depends', 'testAddAction'),
+            new GenericTag('param', '$id')
         ]));
         $ClassGenerator->addMethod('testDeleteAction', ['id'], MethodGenerator::FLAG_PUBLIC, $this->testDeleteAction(),
-                                   new
-                                   DocBlockGenerator(null, null, [
-                                       new GenericTag('depends', 'testAddAction')
-                                   ]));
+            new
+            DocBlockGenerator(null, null, [
+                new GenericTag('depends', 'testAddAction'),
+                new GenericTag('param', '$id')
+            ]));
 
 
         $this->setBody($ClassGenerator->generate());

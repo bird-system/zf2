@@ -22,7 +22,7 @@ class TestCodeGenerator extends AbstractCodeGenerator
         $CodeGenerator = new BaseModuleBaseController($table, $this->config->getBaseModule(),
             $this->config->getBaseModule() . '\\' . self::NAMESPACE_TEST .
             '\\' . self::NAMESPACE_CONTROLLER .
-            '\AbstractBirdsystemHttpControllerTestCase');
+            '\Abstract' . $this->config->getBaseModule() . 'HttpControllerTestCase');
         $CodeGenerator->setBasePath($this->getConfig()->getCodeBasePath());
         $CodeGenerator->setCodeDirectoryName(self::DIRECTORY_TEST);
 

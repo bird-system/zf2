@@ -4,7 +4,8 @@
     "php": ">=5.6",
     "zendframework/zendframework": "^2",
     "phpoffice/phpexcel": "@stable",
-    "mattketmo/camel": "@stable"
+    "mattketmo/camel": "@stable",
+    "crisu83/php-conversion": "dev-master"
   },
   "require-dev": {
     "enlitepro/enlite-monolog": "@stable",

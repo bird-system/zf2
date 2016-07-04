@@ -13,7 +13,6 @@ use Zend\Code\Generator\PropertyGenerator;
 use Zend\Db\Metadata\Object\ColumnObject;
 use Zend\Db\Metadata\Object\ConstraintObject;
 use Zend\Db\Metadata\Object\TableObject;
-use Zend\Code\Exception\RuntimeException;
 
 class BaseModuleBaseModel extends AbstractFileGenerator
 {
