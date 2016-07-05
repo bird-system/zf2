@@ -139,7 +139,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         return $this->viewModel;
     }
 
-    private function setErrorInfo(MvcEvent $event, $exception, $message)
+    public function setErrorInfo(MvcEvent $event, $exception, $message)
     {
         $event->setController($this);
         $event->setResult($this->viewModel);
