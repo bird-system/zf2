@@ -118,11 +118,16 @@ class SubModuleSubController extends AbstractFileGenerator
             '' . self::LINE_FEED .
             '$this->assertNotFalse($json);' . self::LINE_FEED .
             '' . self::LINE_FEED .
-            "\$this->assertArrayHasKey('total', \$json);" . self::LINE_FEED .
             "\$this->assertArrayHasKey('data', \$json);" . self::LINE_FEED .
             "\$this->assertArrayHasKey('success', \$json);" . self::LINE_FEED .
+            "\$this->assertArrayHasKey('total', \$json['data']);" . self::LINE_FEED .
+            "\$this->assertArrayHasKey('start', \$json['data']);" . self::LINE_FEED .
+            "\$this->assertArrayHasKey('limit', \$json['data']);" . self::LINE_FEED .
+            "\$this->assertArrayHasKey('list', \$json['data']);" . self::LINE_FEED .
             '' . self::LINE_FEED .
-            "\$this->assertTrue(is_numeric(\$json['total']));" . self::LINE_FEED .
+            "\$this->assertTrue(is_numeric(\$json['data']['total']));" . self::LINE_FEED .
+            "\$this->assertTrue(is_numeric(\$json['data']['start']));" . self::LINE_FEED .
+            "\$this->assertTrue(is_numeric(\$json['data']['limit']));" . self::LINE_FEED .
             "\$this->assertTrue(\$json['success']);";
 
         return $content;
@@ -152,11 +157,9 @@ class SubModuleSubController extends AbstractFileGenerator
             '' . self::LINE_FEED .
             '$this->assertNotFalse($json);' . self::LINE_FEED .
             '' . self::LINE_FEED .
-            "\$this->assertArrayHasKey('total', \$json);" . self::LINE_FEED .
             "\$this->assertArrayHasKey('data', \$json);" . self::LINE_FEED .
             "\$this->assertArrayHasKey('success', \$json);" . self::LINE_FEED .
             '' . self::LINE_FEED .
-            "\$this->assertTrue(is_numeric(\$json['total']));" . self::LINE_FEED .
             "\$this->assertTrue(\$json['success']);";
 
         return $content;
@@ -186,8 +189,7 @@ class SubModuleSubController extends AbstractFileGenerator
             '' . self::LINE_FEED .
             '$this->assertNotFalse($json);' . self::LINE_FEED .
             '' . self::LINE_FEED .
-            "\$this->assertArrayNotHasKey('total', \$json);" . self::LINE_FEED .
-            "\$this->assertArrayNotHasKey('data', \$json);" . self::LINE_FEED .
+            "\$this->assertArrayHasKey('data', \$json);" . self::LINE_FEED .
             "\$this->assertArrayHasKey('success', \$json);" . self::LINE_FEED .
             '' . self::LINE_FEED .
             "\$this->assertTrue(\$json['success']);";
