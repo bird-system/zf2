@@ -19,13 +19,13 @@ use Zend\Json\Json;
 use Zend\Mvc\Controller\AbstractRestfulController as Base;
 use Zend\Mvc\Exception\DomainException;
 use Zend\Mvc\MvcEvent;
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceManager;
 use Zend\View\Model\JsonModel;
 
 /**
- * @property JsonModel               $viewModel
- * @property Response                $response
- * @property ServiceLocatorInterface $serviceLocator
+ * @property JsonModel      $viewModel
+ * @property Response       $response
+ * @property ServiceManager $serviceLocator
  *
  * @method Request getRequest()
  * @method Response getResponse()
