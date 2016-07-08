@@ -54,6 +54,9 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
     const EVENT_AUTH_BEFORE = 'auth.before';
     const EVENT_AUTH_AFTER = 'auth.after';
 
+    protected $selectLimit;
+    protected $selectOffset;
+
     /**
      * @var string Model ClassName for this Controller
      */
@@ -141,13 +144,16 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
 
     public function setErrorInfo(MvcEvent $event, $exception, $message)
     {
+        $this->viewModel->setVariables([
+            'success'   => false,
+            //TODO: through the exception get error code
+            'errorCode' => get_class($exception),
+            'errorMsg'  => $message
+        ]);
         $event->setController($this);
         $event->setResult($this->viewModel);
-        // $event->setError($message);
-        //TODO: through the exception get error code
-        $event->setParam('code', $exception);
+        $event->setError($message);
         $event->setParam('exception', $exception);
-        // $event->getApplication()->getEventManager()->trigger(MvcEvent::EVENT_DISPATCH_ERROR, $event);
     }
 
     public function create($data)
@@ -196,6 +202,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         $tableGateway = $this->getTableGateway();
         $select       = $this->prepareSelect();
 
+        /* @var \Zend\Db\ResultSet\ResultSet $resultSet */
         if (false == $id) {
             $id = $this->getParam('id');
         }
@@ -207,24 +214,36 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
                 )->limit(1), $data)->getInjectedSelect()
             );
             $foundRows = $resultSet->count();
+            if ($foundRows != 1) {
+                throw new \Exception('can\'t found the record');
+            }
         } else {
             list($resultSet, $foundRows) = $tableGateway->injectSelect($select, $data)->fetchAll();
         }
 
-
-        /* @var \Zend\Db\ResultSet\ResultSet $resultSet */
         $resultSet = $resultSet->toArray();
         $resultSet = $this->getMeasureService()->getConvertList($resultSet);
 
         $this->viewModel->setVariables([
-            'total'   => $foundRows,
-            'data'    => $resultSet,
-            'success' => true,
+            'success'   => true,
+            'errorCode' => '',
+            'errorMsg'  => '',
         ]);
+        if ($id) {
+            $this->viewModel->setVariable('data', current($resultSet));
+        } else {
+            $this->viewModel->setVariable('data', [
+                'total' => $foundRows,
+                'start' => $this->selectOffset,
+                'limit' => $this->selectLimit,
+                'list'  => $resultSet
+            ]);
+        }
         $this->getEventManager()->trigger(self::EVENT_READ_POST, $this);
 
         return $this->viewModel;
     }
+
 
     public function postAction($data)
     {
@@ -258,8 +277,10 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         }
 
         return $this->viewModel->setVariables([
-            'data'    => $Model->getArrayCopy(),
-            'success' => true,
+            'success'   => true,
+            'errorCode' => '',
+            'errorMsg'  => '',
+            'data'      => $Model->getArrayCopy(),
         ]);
     }
 
@@ -274,7 +295,12 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         $tableGateway->delete($this->getTableGateway()->decodeCompositeKey($id));
         $this->getEventManager()->trigger(self::EVENT_DELETE_POST, $this);
 
-        return $this->viewModel->setVariable('success', true);
+        return $this->viewModel->setVariables([
+            'success'   => true,
+            'errorCode' => '',
+            'errorMsg'  => '',
+            'data'      => []
+        ]);
     }
 
     public function deleteListAction()
@@ -288,6 +314,21 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             $select = $this->getTableGateway()->getSql()->select();
         }
 
+        $limit = $this->getParam('limit') && $this->getParam('limit') <= self::MAXIMUM_RECORD_LIMIT
+            ? $this->getParam('limit')
+            : self::DEFAULT_RECORD_LIMIT;
+
+        if ($limit != -1) {
+            $offset             = $this->getParam('start') ? $this->getParam('start') : self::DEFAULT_RECORD_START;
+            $this->selectLimit  = (int)$limit;
+            $this->selectOffset = (int)$offset;
+        } else {
+            $this->selectLimit  = self::DEFAULT_RECORD_LIMIT;
+            $this->selectOffset = self::DEFAULT_RECORD_START;
+        }
+
+        return $select->limit($this->selectLimit)->offset($this->selectOffset);
+
         return $select;
     }
 
@@ -300,7 +341,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             $this->viewModel->setVariable('success', $success);
         }
         if (isset($message)) {
-            $this->viewModel->setVariable('message', $message);
+            $this->viewModel->setVariable('errorMsg', $message);
         }
         if (isset($refresh)) {
             $this->viewModel->setVariable('refresh', $refresh);
