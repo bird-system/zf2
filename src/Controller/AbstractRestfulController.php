@@ -148,7 +148,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             'success'   => false,
             //TODO: through the exception get error code
             'errorCode' => get_class($exception),
-            'errorMsg'  => $message
+            'message'   => $message
         ]);
         $event->setController($this);
         $event->setResult($this->viewModel);
@@ -227,7 +227,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         $this->viewModel->setVariables([
             'success'   => true,
             'errorCode' => '',
-            'errorMsg'  => '',
+            'message'   => '',
         ]);
         if ($id) {
             $this->viewModel->setVariable('data', current($resultSet));
@@ -279,7 +279,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         return $this->viewModel->setVariables([
             'success'   => true,
             'errorCode' => '',
-            'errorMsg'  => '',
+            'message'   => '',
             'data'      => $Model->getArrayCopy(),
         ]);
     }
@@ -298,7 +298,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         return $this->viewModel->setVariables([
             'success'   => true,
             'errorCode' => '',
-            'errorMsg'  => '',
+            'message'   => '',
             'data'      => []
         ]);
     }
@@ -341,7 +341,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             $this->viewModel->setVariable('success', $success);
         }
         if (isset($message)) {
-            $this->viewModel->setVariable('errorMsg', $message);
+            $this->viewModel->setVariable('message', $message);
         }
         if (isset($refresh)) {
             $this->viewModel->setVariable('refresh', $refresh);
