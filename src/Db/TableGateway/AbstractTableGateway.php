@@ -9,6 +9,7 @@ use BS\Exception;
 use BS\I18n\Translator\TranslatorAwareInterface;
 use BS\I18n\Translator\TranslatorAwareTrait;
 use BS\Traits\LoggerAwareTrait;
+use BS\Traits\ServiceLocatorTrait;
 use BS\Utility\Utility;
 use Camel\CaseTransformer;
 use Camel\Format;
@@ -22,7 +23,6 @@ use Zend\Db\Sql\Sql;
 use Zend\Db\TableGateway\Feature;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\I18n\Translator\Translator;
-use Zend\ServiceManager\ServiceLocatorAwareTrait;
 
 /**
  * Class AbstractTableGateway
@@ -35,7 +35,7 @@ abstract class AbstractTableGateway extends TableGateway implements
     LoggerAwareInterface,
     TranslatorAwareInterface
 {
-    use ServiceLocatorAwareTrait, LoggerAwareTrait, TranslatorAwareTrait;
+    use ServiceLocatorTrait, LoggerAwareTrait, TranslatorAwareTrait;
 
     const CACHE_DAILY = 'CACHE_DAILY';
     const CACHE_HOURLY = 'CACHE_HOURLY';
