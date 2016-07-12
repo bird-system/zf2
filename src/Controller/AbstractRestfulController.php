@@ -328,8 +328,6 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         }
 
         return $select->limit($this->selectLimit)->offset($this->selectOffset);
-
-        return $select;
     }
 
     protected function respond($success = true, $message = null, $header = 200, $refresh = false)
