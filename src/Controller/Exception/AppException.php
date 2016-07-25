@@ -1,13 +1,9 @@
 <?php
-
 namespace BS\Controller\Exception;
 
-use BS\Exception;
+use BS\Exception\CommonException;
 
-class AppException extends Exception
+class AppException extends CommonException
 {
-    public function __construct($message = '')
-    {
-        parent::__construct($message);
-    }
+
 }
