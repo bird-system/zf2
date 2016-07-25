@@ -13,9 +13,9 @@ class MethodNotAllowedException extends AbstractException
 {
     protected $code = '100109';
 
-    public function getTranslateMessage($message = 'Method not allowed')
+    public function getTranslation()
     {
-        return $message;
+        return $this->translate('Method not allowed');
     }
 
 }
