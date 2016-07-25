@@ -3,7 +3,7 @@ namespace BS\Exception;
 
 use BS\Exception;
 
-abstract class AbstractWithParamException extends Exception implements ExceptionInterface
+abstract class AbstractWithParamException extends AbstractException
 {
     /**
      * @var array
@@ -15,7 +15,7 @@ abstract class AbstractWithParamException extends Exception implements Exception
         $this->msgParams = $msgParams;
 
         if ($message == '') {
-            $message = $this->getTranslateMessage();
+            $message = $this->getTranslate();
         }
 
         if ($code == 0) {
