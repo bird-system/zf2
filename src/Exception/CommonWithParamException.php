@@ -16,8 +16,8 @@ class CommonWithParamException extends AbstractWithParamException
         parent::__construct($msgParams, $message, $code, $previous);
     }
 
-    public function getTranslateMessage($message = '')
+    public function getTranslate()
     {
-        return $message;
+
     }
 }

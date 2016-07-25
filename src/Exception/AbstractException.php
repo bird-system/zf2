@@ -3,12 +3,12 @@ namespace BS\Exception;
 
 use BS\Exception;
 
-abstract class AbstractException extends Exception implements ExceptionInterface
+abstract class AbstractException extends Exception
 {
     public function __construct($message = '', $code = 0, Exception $previous = null)
     {
         if ($message == '') {
-            $message = $this->getTranslateMessage();
+            $message = $this->getTranslate();
         }
 
         if ($code == 0) {
@@ -16,5 +16,12 @@ abstract class AbstractException extends Exception implements ExceptionInterface
         }
 
         parent::__construct($message, $code, $previous);
+    }
+
+    abstract function getTranslate();
+
+    final public function translate($message = '')
+    {
+        return $message;
     }
 }
