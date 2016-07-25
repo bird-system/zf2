@@ -11,6 +11,7 @@ use BS\I18n\Translator\TranslatorAwareTrait;
 use BS\Traits\LoggerAwareTrait;
 use BS\Utility\Measure;
 use Psr\Log\LoggerAwareInterface;
+use Zend\Db\Sql\Predicate\Expression;
 use Zend\Db\Sql\Select;
 use Zend\EventManager\Event;
 use Zend\Http\Request;
@@ -21,6 +22,9 @@ use Zend\Mvc\Exception\DomainException;
 use Zend\Mvc\MvcEvent;
 use Zend\ServiceManager\ServiceManager;
 use Zend\View\Model\JsonModel;
+use BS\Exception\AbstractWithParamException;
+use Zend\Json\Decoder;
+use BS\Exception\CommonException;
 
 /**
  * @property JsonModel      $viewModel
@@ -132,28 +136,23 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
                 case $exception instanceof UnAuthenticatedException:
                     $message = $this->t('Please login first');
                     break;
+                case $exception instanceof AbstractWithParamException:
+                    $message = vsprintf($this->t($exception->getMessage()), $exception->getMsgParams());
+                    break;
                 default:
-                    $message = $exception->getMessage();
+                    $message = $this->t($exception->getMessage());
                     break;
             }
-            $this->setErrorInfo($event, $exception, $message);
+
+            $this->respond(false, [], $message, $exception->getCode());
+
+            $event->setController($this);
+            $event->setResult($this->viewModel);
+            $event->setError($message);
+            $event->setParam('exception', $exception);
         }
 
         return $this->viewModel;
-    }
-
-    public function setErrorInfo(MvcEvent $event, $exception, $message)
-    {
-        $this->viewModel->setVariables([
-            'success'   => false,
-            //TODO: through the exception get error code
-            'errorCode' => get_class($exception),
-            'message'   => $message
-        ]);
-        $event->setController($this);
-        $event->setResult($this->viewModel);
-        $event->setError($message);
-        $event->setParam('exception', $exception);
     }
 
     public function create($data)
@@ -202,7 +201,6 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         $tableGateway = $this->getTableGateway();
         $select       = $this->prepareSelect();
 
-        /* @var \Zend\Db\ResultSet\ResultSet $resultSet */
         if (false == $id) {
             $id = $this->getParam('id');
         }
@@ -224,21 +222,19 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         $resultSet = $resultSet->toArray();
         $resultSet = $this->getMeasureService()->getConvertList($resultSet);
 
-        $this->viewModel->setVariables([
-            'success'   => true,
-            'errorCode' => '',
-            'message'   => '',
-        ]);
         if ($id) {
-            $this->viewModel->setVariable('data', current($resultSet));
+            $redata = current($resultSet);
         } else {
-            $this->viewModel->setVariable('data', [
+            $redata = [
                 'total' => $foundRows,
                 'start' => $this->selectOffset,
                 'limit' => $this->selectLimit,
                 'list'  => $resultSet
-            ]);
+            ];
         }
+
+        $this->respond(true, $redata);
+
         $this->getEventManager()->trigger(self::EVENT_READ_POST, $this);
 
         return $this->viewModel;
@@ -276,12 +272,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             $this->getEventManager()->trigger(self::EVENT_CREATE_POST, $this, ['data' => $data, 'Model' => $Model]);
         }
 
-        return $this->viewModel->setVariables([
-            'success'   => true,
-            'errorCode' => '',
-            'message'   => '',
-            'data'      => $Model->getArrayCopy(),
-        ]);
+        return $this->respond(true, $Model->getArrayCopy());
     }
 
     public function deleteAction($id = false)
@@ -295,12 +286,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         $tableGateway->delete($this->getTableGateway()->decodeCompositeKey($id));
         $this->getEventManager()->trigger(self::EVENT_DELETE_POST, $this);
 
-        return $this->viewModel->setVariables([
-            'success'   => true,
-            'errorCode' => '',
-            'message'   => '',
-            'data'      => []
-        ]);
+        return $this->respond();
     }
 
     public function deleteListAction()
@@ -314,6 +300,335 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             $select = $this->getTableGateway()->getSql()->select();
         }
 
+        $select = $this->prepareSelectSetSelectFields($select);
+        $select = $this->prepareSelectSetFilters($select);
+        $select = $this->prepareSelectSetSearch($select);
+        $select = $this->prepareSelectSetLimit($select);
+        $select = $this->prepareSelectSetWhere($select);
+        $select = $this->prepareSelectSetSortInfo($select);
+        $select = $this->prepareSelectSetDateLimit($select);
+
+        return $select;
+    }
+
+
+    protected function prepareSelectSetSelectFields(Select $select)
+    {
+        $params       = $this->getParams();
+        $selectFields = [];
+        if (isset($params['selectFields'])) {
+            $selectFields = explode(',', $params['selectFields']);
+        }
+
+        if (count($selectFields) == 0) {
+            $selectFields[] = Select::SQL_STAR;
+        } else {
+            //select all primary keys whatsoever
+            $primaryKeys  = $this->getTableGateway()->getPrimaryKeys();
+            $selectFields = array_merge($selectFields, $primaryKeys);
+        }
+
+        $cols = [];
+        foreach ($selectFields as $column) {
+            if (is_string($column) && $column != Select::SQL_STAR) {
+                $columnString = str_replace('-', '.', $column);
+                if (!strpos($columnString, '.')) {
+                    $columnString = $this->getTableGateway()->getTable() . '.' . $columnString;
+                }
+                $cols[$column] = new Expression($columnString);
+            } else {
+                $cols[] = $column;
+            }
+        }
+
+        if ($cols && (count($cols) > 0)) {
+            $select->columns($cols);
+        }
+
+        return $select;
+    }
+
+    /**
+     * @param             $filter
+     * @param Select|null $select
+     *
+     * @return mixed
+     */
+    protected function onBeforeProcessFilter($filter, Select $select = null)
+    {
+        return $filter;
+    }
+
+    /**
+     * @param Select $select
+     * @param array  $params
+     *
+     * @return Select
+     * @codeCoverageIgnore Ignore code coverage here to prevent incorrect coverage detection
+     */
+    protected function prepareSelectSetFilters(Select $select, $params = [])
+    {
+        if (empty($params)) {
+            $params = $this->getParams();
+        }
+
+        if (!empty($params['includeNullFields'])) {
+            $nullFields = explode(',', $params['includeNullFields']);
+            if (!empty($nullFields)) {
+                $nullFields = array_map(function ($val) {
+                    if (stripos($val, '-') > 0) {
+                        return str_replace('-', '.', $val);
+                    } else {
+                        return $this->getTableGateway()->getTable() . '.' . $val;
+                    }
+                }, $nullFields);
+            }
+        }
+
+        if (!empty($params['filter'])) {
+            $filters          = Json::decode($params['filter'], Json::TYPE_ARRAY);
+            $customizedFields = $this->getTableGateway()->getCustomizedFilterFields();
+            foreach ($filters as $filter) {
+                $conditionOperator = 'where';
+                // Stupid ExtJS use 'property' as property name in Store Filter
+                // And 'field' as property name in Grid Filter, I have to standarlise them
+                $filter['field'] = empty($filter['property']) ? $filter['field'] : $filter['property'];
+                if (isset($filter['field']) && array_key_exists($filter['field'], $customizedFields)) {
+                    if (is_array($customizedFields[$filter['field']])) {
+                        if (isset($customizedFields[$filter['field']]['use_having']) &&
+                            $customizedFields[$filter['field']]['use_having'] == 1
+                        ) {
+                            $conditionOperator = 'having';
+                            $filter['field']   = $customizedFields[$filter['field']]['field'];
+                        }
+                    } else {
+                        $filter['field'] = $customizedFields[$filter['field']];
+                    }
+                } else {
+
+                    $filter = $this->onBeforeProcessFilter($filter, $select);
+
+                    if (empty($filter['field']) || !isset($filter['value'])) {
+                        continue;
+                    }
+
+                    $filter['field'] = str_replace('-', '.', $filter['field']);
+
+                    if (!@strlen($filter['field'])) {
+                        continue;
+                    }
+
+                    if (is_string($filter['value'])) {
+                        $filter['value'] = trim($filter['value']);
+                        if (0 == strlen($filter['value'])) {
+                            continue;
+                        }
+                    }
+
+                    if (!strstr($filter['field'], '.')) {
+                        $filter['field'] = $this->getTableGateway()->getTable() . '.' . $filter['field'];
+                    }
+                }
+                switch (@$filter['type']) {
+                    case 'string':
+                        $select->$conditionOperator([
+                            $filter['field'] . ' LIKE ?'
+                            => '%' . $filter['value'] . '%',
+                        ]);
+                        break;
+                    case 'boolean':
+                        $select->$conditionOperator([
+                            $filter['field'] . ' = ?'
+                            => $filter['value'] == true ? 1 : 0,
+                        ]);
+                        break;
+                    case 'numeric':
+                        $operatorMap = [
+                            'ne' => '!=',
+                            'eq' => '=',
+                            'lt' => '<=',
+                            'gt' => '>=',
+                        ];
+
+                        $filter['comparison'] =
+                            array_key_exists('comparison', $filter) ? $filter['comparison'] : 'eq';
+                        if (!array_key_exists($filter['comparison'], $operatorMap)) {
+                            continue;
+                        }
+                        if (isset($nullFields) && intval($filter['value']) <= 0 &&
+                            in_array($filter['comparison'], ['eq', 'lt']) && in_array($filter['field'], $nullFields)
+                        ) {
+                            $select->$conditionOperator([$filter['field'] . ' IS NULL']);
+                        } else {
+                            $select->$conditionOperator([
+                                $filter['field'] . ' ' . $operatorMap[$filter['comparison']] . ' ?'
+                                => $filter['value'],
+                            ]);
+                        }
+                        break;
+                    case 'date':
+                        $operatorMap = [
+                            'ne' => '!=',
+                            'eq' => '=',
+                            'lt' => '<=',
+                            'gt' => '>=',
+                        ];
+
+                        $filter['comparison'] =
+                            array_key_exists('comparison', $filter) ? $filter['comparison'] : 'eq';
+                        if (!array_key_exists($filter['comparison'], $operatorMap)) {
+                            continue;
+                        }
+                        if ($filter['comparison'] == 'eq') {
+                            $select->$conditionOperator([
+                                $filter['field'] . " BETWEEN '? 00:00:00' AND '? 23:59:59'"
+                                => [new Expression($filter['value']), new Expression($filter['value'])],
+                            ]);
+                        } else {
+                            $select->$conditionOperator([
+                                $filter['field'] . ' ' . $operatorMap[$filter['comparison']] . ' ?'
+                                => new Expression("'" . $filter['value'] . "'"),
+                            ]);
+                        }
+                        break;
+                    case 'list':
+                        $select->$conditionOperator->in(new Expression($filter['field']), $filter['value']);
+                        break;
+                    default:
+                        $select->$conditionOperator([$filter['field'] . ' = ?' => $filter['value']]);
+                }
+            }
+        }
+
+        return $select;
+    }
+
+
+    /**
+     * @param Select $select
+     *
+     * @return Select
+     * @throws Exception
+     */
+    protected function prepareSelectSetSearch(Select $select)
+    {
+        $params = $this->getParams();
+        if (array_key_exists('field', $params) && array_key_exists('query', $params)) {
+            $select->where([
+                "{$this->getTableGateway()->getTable()}.{$params['field']} LIKE ?" => "%{$params['query']}%",
+            ]);
+        } elseif (array_key_exists('fields', $params) && array_key_exists('operators', $params) &&
+                  array_key_exists('values', $params)
+        ) {
+            $fields    = @$params['fields'];
+            $operators = @$params['operators'];
+            $values    = @$params['values'];
+
+            if (sizeof($fields) != sizeof($operators)) {
+                throw new CommonException('Search criterias wrong!');
+            }
+            if (($fields != null) && ($operators != null) && ($values != null)) {
+                $this->_setConditions($select, $fields, $operators, $values);
+            }
+        }
+
+        return $select;
+    }
+
+    private function _setConditions(Select $select, $fields, $operators, $values)
+    {
+        if (!is_array($values)) {
+            return $select->where(["{$this->getTableGateway()->getTable()}.{$fields[0]} {$operators[0]} ?" => $values]);
+        }
+
+        foreach ($fields as $key => $value) {
+            if (@$values[$key]) {
+                if (strtoupper($operators[$key]) == 'LIKE') {
+                    $values[$key] = "%$values[$key]%";
+                }
+
+                $select->where([
+                    "{$this->getTableGateway()->getTable()}.{$fields[$key]} {$operators[$key]} ?" => $values[$key],
+                ]);
+            }
+        }
+
+        return $select;
+    }
+
+    /**
+     * @param Select $select
+     *
+     * @return Select
+     * @throws Exception
+     */
+    protected function prepareSelectSetWhere(Select $select)
+    {
+        $params      = $this->getParams();
+        $primaryKeys = $this->getTableGateway()->getPrimaryKeys();
+        $allKeys     = array_merge($primaryKeys, $this->getTableGateway()->getSearchFields());
+        foreach ($allKeys as $key) {
+            if (array_key_exists($key, $params)) {
+                $arrField = explode('-', $key);
+                if (count($arrField) < 2) {
+                    array_unshift($arrField, $this->getTableGateway()->getTable());
+                }
+                $field = implode('.', $arrField);
+                $select->where(["{$field} = ?" => $params[$key]]);
+            }
+        }
+
+        return $select;
+    }
+
+    /**
+     * @param Select $select
+     *
+     * @return Select
+     */
+    protected function prepareSelectSetSortInfo(Select $select)
+    {
+        $sortInfos            =
+            $this->getParam('sort') ? Decoder::decode($this->getParam('sort'), Json::TYPE_ARRAY) : null;
+        $customizedSortFields = $this->getTableGateway()->getCustomizedSortFields();
+        if ($sortInfos) {
+            foreach ($sortInfos as $sort) {
+                if (in_array($sort['property'], $customizedSortFields)) {
+                    $select->order($sort['property'] . ' ' . $sort['direction']);
+                } else {
+                    if (array_key_exists($sort['property'], $customizedSortFields)) {
+                        $select->order($customizedSortFields[$sort['property']] . ' ' . $sort['direction']);
+                    } else {
+                        $sort['property'] = str_replace('-', '.', $sort['property']);
+                        $sort['property'] = strpos($sort['property'], '.') ? $sort['property'] :
+                            $this->getTableGateway()->getTable() . '.' . $sort['property'];
+                        $select->order($sort['property'] . ' ' . $sort['direction']);
+                    }
+                }
+            }
+        }
+
+        return $select;
+    }
+
+    protected function prepareSelectSetDateLimit(Select $select)
+    {
+        //TODO:read datelimit from company config
+        /*$CompanyConfig = $this->serviceLocator->get(CompanyConfig::class);
+        $config        = $CompanyConfig->getModuleConfiguration('site');
+        if (isset($config->site->features->dateLimit)) {
+            $select->where($this->getTableGateway()->getTable() . '.dateFrom',
+                new Expression("DATE_SUB(NOW(),INTERVAL {$config->site->features->dateLimit} DAY)"));
+        }
+
+        return $select;*/
+
+        return $select;
+    }
+
+
+    protected function prepareSelectSetLimit(Select $select)
+    {
         $limit = $this->getParam('limit') && $this->getParam('limit') <= self::MAXIMUM_RECORD_LIMIT
             ? $this->getParam('limit')
             : self::DEFAULT_RECORD_LIMIT;
@@ -330,18 +645,17 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         return $select->limit($this->selectLimit)->offset($this->selectOffset);
     }
 
-    protected function respond($success = true, $message = null, $header = 200, $refresh = false)
+
+    protected function respond($success = true, $data = [], $message = '', $errCode = '', $refresh = false)
     {
-        if (isset($header)) {
-            $this->response->setMetadata($header);
-        }
-        if (isset($success)) {
-            $this->viewModel->setVariable('success', $success);
-        }
-        if (isset($message)) {
-            $this->viewModel->setVariable('message', $message);
-        }
-        if (isset($refresh)) {
+        $this->viewModel->setVariables([
+            'success' => $success,
+            'errCode' => $errCode,
+            'message' => $message,
+            'data'    => $data,
+        ]);
+
+        if ($refresh !== false) {
             $this->viewModel->setVariable('refresh', $refresh);
         }
 
