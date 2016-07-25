@@ -22,6 +22,11 @@
       "CLI\\": "module/CLI/src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "BS\\Test\\": "test/"
+    }
+  },
   "bin": [
     "bs-zf2"
   ]

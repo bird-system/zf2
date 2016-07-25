@@ -137,7 +137,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
                     $message = $this->t('Please login first');
                     break;
                 case $exception instanceof AbstractWithParamException:
-                    $message = vsprintf($this->t($exception->getMessage()), $exception->getMsgParams());
+                    $message = vsprintf($this->t($exception->getMessage()), $exception->getMessageParams());
                     break;
                 default:
                     $message = $this->t($exception->getMessage());

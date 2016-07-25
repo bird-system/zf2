@@ -1,26 +1,28 @@
 <?php
 namespace BS\Exception;
 
-use BS\Exception;
 
-abstract class AbstractException extends Exception
+abstract class AbstractException extends \Exception
 {
-    public function __construct($message = '', $code = 0, Exception $previous = null)
+    public function __construct($message = '', $code = 0, \Exception $previous = null)
     {
-        if ($message == '') {
-            $message = $this->getTranslate();
-        }
-
-        if ($code == 0) {
-            $code = $this->code;
-        }
-
-        parent::__construct($message, $code, $previous);
+        parent::__construct(
+            $message == '' ? $this->getTranslation() : $message,
+            $code == 0 ? $this->code : $code,
+            $previous
+        );
     }
 
-    abstract function getTranslate();
+    abstract function getTranslation();
 
-    final public function translate($message = '')
+    /**
+     * This function is for PoEdit to recongize the 'translate' keyword
+     *
+     * @param string $message
+     *
+     * @return string
+     */
+    protected function translate($message = '')
     {
         return $message;
     }
