@@ -1,36 +1,22 @@
 <?php
 namespace BS\Exception;
 
-use BS\Exception;
-
 abstract class AbstractWithParamException extends AbstractException
 {
     /**
      * @var array
      */
-    protected $msgParams;
+    protected $messageParams;
 
-    public function __construct(Array $msgParams, $message = '', $code = 0, \Exception $previous = null)
+    public function __construct(Array $messageParams, $message = '', $code = 0, \Exception $previous = null)
     {
-        $this->msgParams = $msgParams;
-
-        if ($message == '') {
-            $message = $this->getTranslate();
-        }
-
-        if ($code == 0) {
-            $code = $this->code;
-        }
+        $this->messageParams = $messageParams;
 
         parent::__construct($message, $code, $previous);
     }
 
-    final public function getMsgParams()
+    final public function getMessageParams()
     {
-        if (is_array($this->msgParams)) {
-            return $this->msgParams;
-        } else {
-            return [];
-        }
+        return is_array($this->messageParams) ? $this->messageParams : [];
     }
 }
