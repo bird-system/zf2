@@ -7,11 +7,15 @@
 
 namespace BS\Controller\Exception;
 
-class MethodNotAllowedException extends AppException
+use BS\Exception\AbstractException;
+
+class MethodNotAllowedException extends AbstractException
 {
-    public function __construct($message = 'Method not allowed')
+    protected $code = '100109';
+
+    public function getTranslateMessage($message = 'Method not allowed')
     {
-        parent::__construct($message);
+        return $message;
     }
 
 }
