@@ -10,4 +10,5 @@ namespace BS\Authentication;
 
 class UnAuthenticatedException extends \Exception
 {
+    protected $code = '100111';
 }
