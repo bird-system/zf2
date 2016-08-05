@@ -70,13 +70,13 @@ class Measure implements LoggerAwareInterface
     {
 //        $this->log('User Measure Unit', $config);
         if (!isset($config[self::$LENGTH])) {
-            $config[self::$LENGTH] = $this->mapUnitName('MILLIMETER');
+            $config[self::$LENGTH] = 'MILLIMETER';
         }
         if (!isset($config[self::$WEIGHT])) {
-            $config[self::$WEIGHT] = $this->mapUnitName('GRAM');
+            $config[self::$WEIGHT] = 'GRAM';
         }
         if (!isset($config[self::$VOLUME])) {
-            $config[self::$VOLUME] = $this->mapUnitName('CUBIC_MILLIMETER');
+            $config[self::$VOLUME] = 'CUBIC_MILLIMETER';
         }
 
         $this->userLengthUnit = $config[self::$LENGTH];
