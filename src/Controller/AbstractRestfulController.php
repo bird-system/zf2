@@ -61,6 +61,8 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
     protected $selectLimit;
     protected $selectOffset;
 
+    static $jsonContentParams = [];
+
     /**
      * @var string Model ClassName for this Controller
      */
@@ -213,7 +215,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             );
             $foundRows = $resultSet->count();
             if ($foundRows != 1) {
-                throw new \Exception('can\'t found the record');
+                throw new CommonException('can\'t found the record');
             }
         } else {
             list($resultSet, $foundRows) = $tableGateway->injectSelect($select, $data)->fetchAll();
@@ -626,23 +628,27 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
         return $select;
     }
 
-
     protected function prepareSelectSetLimit(Select $select)
     {
-        $limit = $this->getParam('limit') && $this->getParam('limit') <= self::MAXIMUM_RECORD_LIMIT
+        $limit = $this->getParam('limit') && $this->getParam('limit') <= static::MAXIMUM_RECORD_LIMIT
             ? $this->getParam('limit')
-            : self::DEFAULT_RECORD_LIMIT;
+            : static::DEFAULT_RECORD_LIMIT;
 
-        if ($limit != -1) {
-            $offset             = $this->getParam('start') ? $this->getParam('start') : self::DEFAULT_RECORD_START;
-            $this->selectLimit  = (int)$limit;
-            $this->selectOffset = (int)$offset;
-        } else {
-            $this->selectLimit  = self::DEFAULT_RECORD_LIMIT;
-            $this->selectOffset = self::DEFAULT_RECORD_START;
+        $this->selectOffset = is_numeric($this->getParam('start')) && $this->getParam('start') >= 0 ?
+            (int)$this->getParam('start') : static::DEFAULT_RECORD_START;
+        $this->selectLimit  = static::DEFAULT_RECORD_LIMIT;
+
+        if ($limit > 0) {
+            $this->selectLimit = (int)$limit;
+        } elseif ($limit == -1) {
+            $this->selectLimit = -1;
         }
 
-        return $select->limit($this->selectLimit)->offset($this->selectOffset);
+        if ($this->selectLimit != -1) {
+            $select->limit($this->selectLimit);
+        }
+
+        return $select->offset($this->selectOffset);
     }
 
 
@@ -666,9 +672,9 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
      * @param      $param
      * @param null $default
      *
-     * @return mixed|null
+     * @return array|null
      */
-    protected function getParam($param, $default = null)
+    public function getParam($param, $default = null)
     {
         if ($this->params()->fromPost($param) !== null) {
             return $this->params()->fromPost($param);
@@ -678,17 +684,39 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             return $this->params()->fromQuery($param);
         }
 
-        return is_null($this->params()->fromRoute($param)) ? $default : $this->params()->fromRoute($param);
+        if ($this->params()->fromRoute($param) !== null) {
+            return $this->params()->fromRoute($param);
+        }
+
+        return is_null($this->getJsonContentParam($param)) ? $default : $this->getJsonContentParam($param);
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    protected function getParams()
+    public function getParams()
     {
-        return !empty($this->params()->fromPost()) ? $this->params()->fromPost() :
+        $params = !empty($this->params()->fromPost()) ? $this->params()->fromPost() :
             (!empty($this->params()->fromQuery()) ? $this->params()->fromQuery() :
                 $this->params()->fromRoute());
+
+        return array_merge($params, $this->getJsonContentParam());
+    }
+
+
+    protected function getJsonContentParam($param = null)
+    {
+        if ($this->requestHasContentType($this->getRequest(), self::CONTENT_TYPE_JSON)) {
+            if (empty(static::$jsonContentParams)) {
+                if (!empty($this->getRequest()->getContent())) {
+                    static::$jsonContentParams = Json::decode($this->getRequest()->getContent(), $this->jsonDecodeType);
+                }
+            }
+        }
+
+        return is_null($param) ? static::$jsonContentParams :
+            (isset(static::$jsonContentParams[$param]) ? static::$jsonContentParams[$param] : null);
+
     }
 
     /**
@@ -841,7 +869,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
 
     public function deleteList($data)
     {
-        if(!is_array($data)){
+        if (!is_array($data)) {
             $data = $this->getParams();
         }
         $ids = $data['ids'];
