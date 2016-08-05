@@ -841,6 +841,9 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
 
     public function deleteList($data)
     {
+        if(!is_array($data)){
+            $data = $this->getParams();
+        }
         $ids = $data['ids'];
         if (!is_array($ids)) {
             $ids = array_filter(explode('_', $ids));
