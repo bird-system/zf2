@@ -215,7 +215,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             );
             $foundRows = $resultSet->count();
             if ($foundRows != 1) {
-                throw new CommonException('can\'t found the record');
+                throw new CommonException('can\'t find the record');
             }
         } else {
             list($resultSet, $foundRows) = $tableGateway->injectSelect($select, $data)->fetchAll();

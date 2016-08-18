@@ -6,12 +6,12 @@ class CommonWithParamException extends AbstractWithParamException
     /**
      * CommonWithParamException constructor.
      *
-     * @param array           $messageParams
      * @param string          $message
+     * @param array           $messageParams
      * @param int             $code
      * @param \Exception|null $previous
      */
-    public function __construct(Array $messageParams, $message, $code = 100101, \Exception $previous = null)
+    public function __construct($message, Array $messageParams, $code = 100101, \Exception $previous = null)
     {
         parent::__construct($messageParams, $message, $code, $previous);
     }
