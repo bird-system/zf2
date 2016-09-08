@@ -9,13 +9,14 @@ class DockerComposeController extends AbstractConsoleActionController
     protected $banner = 'DockerCompose Utility';
 
     protected $help = [
-        '__SCRIPT__ docker-compose generate ' .
-        'TEST-SUITE SEED-FILE OUTPUT-FILE' => 'Take create temporary docker-compose.yml file' .
-                                              'with db and php service inside for phpunit '
-                                              . 'purpose.',
+        '__SCRIPT__ docker-compose generate-name ' .
+        'TEST-SUITE' => 'return temporary docker-compose.yml file name',
+        '__SCRIPT__ docker-compose generate-content ' .
+        'TEST-SUITE SEED-FILE' => 'return temporary docker-compose.yml file content ' .
+                                  'with db and php service inside for phpunit purpose.',
     ];
 
-    public function generateAction()
+    public function generateContentAction()
     {
         $testSuite = $this->getRequest()->getParam('test-suite');
         $testSuite = strtolower(str_replace('\\', '-', $testSuite));
@@ -23,8 +24,7 @@ class DockerComposeController extends AbstractConsoleActionController
             $testSuite = substr($testSuite, 0, strlen($testSuite) - 1);
         }
 
-        $seedFile   = $this->getRequest()->getParam('file-seed');
-        $outputFile = $this->getRequest()->getParam('file-output');
+        $seedFile = $this->getRequest()->getParam('file-seed');
 
         $services   = [];
         $services[] = 'db-' . $testSuite . ':';
@@ -37,7 +37,18 @@ class DockerComposeController extends AbstractConsoleActionController
         $services[] = '    service: php';
         $services[] = '  links:';
         $services[] = '    - db-' . $testSuite . ':db';
-        file_put_contents($outputFile, implode(PHP_EOL, $services));
+
+        echo implode(PHP_EOL, $services);
+    }
+
+    public function generateNameAction()
+    {
+        $testSuite = $this->getRequest()->getParam('test-suite');
+        $testSuite = strtolower(str_replace('\\', '-', $testSuite));
+        if (strpos($testSuite, '-', strlen($testSuite) - 1)) {
+            $testSuite = substr($testSuite, 0, strlen($testSuite) - 1);
+        }
+
         echo $testSuite;
     }
 }

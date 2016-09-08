@@ -73,12 +73,21 @@ return [
                         ],
                     ],
                 ],
-                'docker-compose-generate' => [
+                'docker-compose-generate-name' => [
                     'options' => [
-                        'route'    => 'docker-compose generate <test-suite> <file-seed> <file-output>',
+                        'route'    => 'docker-compose generate-name <test-suite>',
                         'defaults' => [
                             'controller' => 'CLI\Controller\DockerComposeController',
-                            'action'     => 'generate',
+                            'action'     => 'generate-name',
+                        ],
+                    ],
+                ],
+                'docker-compose-generate-content' => [
+                    'options' => [
+                        'route'    => 'docker-compose generate-content <test-suite> <file-seed>',
+                        'defaults' => [
+                            'controller' => 'CLI\Controller\DockerComposeController',
+                            'action'     => 'generate-content',
                         ],
                     ],
                 ],
