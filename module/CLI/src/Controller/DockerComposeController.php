@@ -36,7 +36,7 @@ class DockerComposeController extends AbstractConsoleActionController
         $services[] = '    file: ' . $seedFile;
         $services[] = '    service: php';
         $services[] = '  links:';
-        $services[] = '    - \'db-' . $testSuite . ':db\'';
+        $services[] = '    - db-' . $testSuite . ':db';
         file_put_contents($outputFile, implode(PHP_EOL, $services));
         echo $testSuite;
     }
