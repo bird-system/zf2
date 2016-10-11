@@ -111,20 +111,25 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
             if (!$routeMatch) {
                 throw new DomainException('Missing route matches; unsure how to retrieve action');
             }
-            $action = $routeMatch->getParam('action', false);
+            /** @var \Zend\Http\PhpEnvironment\Request $request */
+            $request = $event->getRequest();
+            $action  = $routeMatch->getParam('action', false);
+
             if ($action) {
                 // Handle arbitrary methods, ending in Action
                 $method = static::getMethodFromAction($action);
                 if (!method_exists($this, $method)) {
                     $routeMatch->setParam('id', $action);
                     $routeMatch->setParam('action', false);
-                    /** @var Request $request */
-                    $request = $event->getRequest();
                     if (strtolower($request->getMethod()) == 'get') {
                         $routeMatch->setParam('action', 'index');
                     }
                 }
             }
+            if (extension_loaded('newrelic')) {
+                newrelic_name_transaction($request->getUri()->getPath());
+            }
+
 
             return parent::onDispatch($event);
         } catch (\Exception $exception) {
@@ -802,7 +807,10 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
      */
     protected function getDbConnection()
     {
-        return $this->getDbAdapter()->getDriver()->getConnection();
+        /** @var \Zend\Db\Adapter\Driver\AbstractConnection $connection */
+        $connection = $this->getDbAdapter()->getDriver()->getConnection();
+
+        return $connection;
     }
 
     /**
