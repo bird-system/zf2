@@ -1,5 +1,11 @@
 {
   "name": "birdsystem/zf2",
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/bird-system/zf2"
+    }
+  ],
   "require": {
     "php": ">=5.6",
     "zendframework/zendframework": "^2",
