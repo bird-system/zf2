@@ -84,7 +84,7 @@ return [
                 ],
                 'docker-compose-generate-content' => [
                     'options' => [
-                        'route'    => 'docker-compose generate-content <test-suite> <file-seed>',
+                        'route'    => 'docker-compose generate-content <test-suite> <file-seed>  [v2]:version',
                         'defaults' => [
                             'controller' => 'CLI\Controller\DockerComposeController',
                             'action'     => 'generate-content',
