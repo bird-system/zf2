@@ -341,9 +341,11 @@ abstract class AbstractTableGateway extends TableGateway implements
             $this->upsertPreCheck($data);
         }
 
-        $data = $this->sanitizeData($data);
+        $data   = $this->sanitizeData($data);
+        $result = parent::insert($data);
+        $id     = $this->getLastInsertValue();
 
-        return parent::insert($data);
+        return $result;
     }
 
     /**
@@ -709,7 +711,6 @@ abstract class AbstractTableGateway extends TableGateway implements
 
         return $this;
     }
-
 
 
     protected function _checkStatusChange($oldValue, $newValue, $stateTransition = [])
