@@ -20,7 +20,6 @@ use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Select;
 use Zend\Db\Sql\Sql;
-use Zend\Db\TableGateway\Feature;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\I18n\Translator\Translator;
 
@@ -96,6 +95,11 @@ abstract class AbstractTableGateway extends TableGateway implements
     protected static $translator;
 
     /**
+     * @var null|\Zend\Db\ResultSet\ResultSet|AbstractModel[]
+     */
+    protected $oldRecords = null;
+
+    /**
      * AbstractTableGateway constructor.
      *
      * @param AdapterInterface $adapter
@@ -116,7 +120,7 @@ abstract class AbstractTableGateway extends TableGateway implements
     }
 
     /**
-     * @return \Zend\Db\Adapter\Driver\AbstractConnection
+     * @return \Zend\Db\Adapter\Driver\AbstractConnection|\Zend\Db\Adapter\Driver\ConnectionInterface
      */
     protected function getDbConnection()
     {
@@ -240,7 +244,7 @@ abstract class AbstractTableGateway extends TableGateway implements
     /**
      * @param $id
      *
-     * @return AbstractModel
+     * @return array|\ArrayObject|AbstractModel
      * @throws SeekException
      */
     public function get($id)
@@ -736,6 +740,15 @@ abstract class AbstractTableGateway extends TableGateway implements
                 ));
             }
         }
+    }
+
+    protected function getOldRecords($where, $forceSelect = false)
+    {
+        if (is_null($this->oldRecords) || $forceSelect) {
+            $this->oldRecords = $this->select($where)->buffer();
+        }
+
+        return $this->oldRecords;
     }
 
     public function getCount($where = [], $group = null)

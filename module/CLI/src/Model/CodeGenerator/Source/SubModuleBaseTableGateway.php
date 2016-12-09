@@ -55,6 +55,7 @@ class SubModuleBaseTableGateway extends AbstractFileGenerator
             new GenericTag('method', 'Model save(Model $model, $voidUpsertPreCheck = false)'),
             new GenericTag('method', 'Model[]|ResultSet selectWith(Select $select)'),
             new GenericTag('method', 'Model[]|ResultSet select($where = null)'),
+            new GenericTag('method', 'null|Model[]|ResultSet getOldRecords($where, $forceSelect = false)'),
         ]));
         $ClassGenerator->addProperty('modelClass',
             new PropertyValueGenerator(
