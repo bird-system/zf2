@@ -59,7 +59,7 @@ class Measure implements LoggerAwareInterface
     static $VOLUME = 'VOLUME';
     static $WEIGHT = 'WEIGHT';
 
-    private $is_convert = false;
+    protected $is_convert = false;
 
     /**
      * @param array $config
