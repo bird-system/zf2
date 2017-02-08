@@ -173,7 +173,7 @@ class Measure implements LoggerAwareInterface
         return $array;
     }
 
-    private function convertSysWeight($value)
+    public function convertSysWeight($value)
     {
 
         $weight = new Mass\Mass($value, $this->mapUnitName($this->userWeightUnit));
@@ -185,7 +185,7 @@ class Measure implements LoggerAwareInterface
         return $convertWeight;
     }
 
-    private function convertSysLength($value)
+    public function convertSysLength($value)
     {
         $length = new Length\Length($value, $this->mapUnitName($this->userLengthUnit));
 
@@ -196,7 +196,7 @@ class Measure implements LoggerAwareInterface
         return $convertLength;
     }
 
-    private function convertSysVolume($value)
+    public function convertSysVolume($value)
     {
         $volume = new Volume\Volume($value, $this->mapUnitName($this->userVolumeUnit));
 
