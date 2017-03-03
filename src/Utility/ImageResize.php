@@ -115,6 +115,8 @@ class ImageResize
 
         $newImage = $imageCreateFunc($this->imageToResize);
 
+        imagealphablending($imageC, false);
+        imagesavealpha($imageC, true);
         imagecopyresampled($imageC, $newImage, 0, 0, 0, 0, $this->newWidth, $this->newHeight, $width, $height);
 
         if ($this->saveFolder) {
