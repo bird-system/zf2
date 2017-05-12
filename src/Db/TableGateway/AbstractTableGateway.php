@@ -449,7 +449,7 @@ abstract class AbstractTableGateway extends TableGateway implements
 
         // Deal with empty value
         foreach ($data as $key => $value) {
-            if (!in_array($key, $primaryKeys) && empty($data[$key]) && !is_numeric($data[$key])) {
+            if (!in_array($key, $primaryKeys) && !array_key_exists($key, $data) && !is_numeric($data[$key])) {
                 $data[$key] = new Expression('DEFAULT');
             }
         }
