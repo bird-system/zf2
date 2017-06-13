@@ -21,4 +21,9 @@ trait NotAllowAccessTrait
     {
         throw new MethodNotAllowedException();
     }
+
+    public function deleteListAction()
+    {
+        throw new MethodNotAllowedException();
+    }
 }
