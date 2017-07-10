@@ -1,4 +1,5 @@
 <?php
+
 namespace BS\Controller;
 
 
@@ -250,6 +251,7 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
 
     public function postAction($data)
     {
+        $data = $this->getMeasureService()->saveConvertArray($data);
         /**
          * @var \BS\Db\Model\AbstractModel $Model
          */
@@ -265,14 +267,12 @@ abstract class AbstractRestfulController extends Base implements LoggerAwareInte
 
         if ($isUpdate) {
             $data  = $this->getEventManager()->trigger(self::EVENT_UPDATE_PRE, $this, $data)->last();
-            $data  = $this->getMeasureService()->saveConvertArray($data);
             $Model = $this->getTableGateway()->getModel($OldModel->getArrayCopy())->exchangeArray($data);
             $this->getTableGateway()->saveUpdate($Model, $OldModel);
             $Model = $this->getTableGateway()->get($Model->getId());
             $this->getEventManager()->trigger(self::EVENT_UPDATE_POST, $this, ['data' => $data, 'Model' => $Model]);
         } else {
             $data = $this->getEventManager()->trigger(self::EVENT_CREATE_PRE, $this, $data)->last();
-            $data = $this->getMeasureService()->saveConvertArray($data);
             $Model->exchangeArray($data);
             $id    = $this->getTableGateway()->saveInsert($Model);
             $Model = $this->getTableGateway()->get($id);
